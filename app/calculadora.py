@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 # Función para cálculos de ahorros
@@ -104,9 +103,12 @@ def calcular_business_case():
         fig.update_layout(
             title="Ahorro y ROI Acumulado",
             xaxis=dict(title="Meses"),
-            yaxis=dict(title="Ahorro Acumulado (USD)", titlefont=dict(color="blue"), tickfont=dict(color="blue")),
-            yaxis2=dict(title="ROI Acumulado (%)", titlefont=dict(color="orange"), tickfont=dict(color="orange"),
-                        overlaying="y", side="right"),
+            yaxis=dict(title="Ahorro Acumulado (USD)"),
+            yaxis2=dict(
+                title="ROI Acumulado (%)",
+                overlaying="y",
+                side="right"
+            ),
             hovermode="x unified"
         )
         st.plotly_chart(fig)
