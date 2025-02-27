@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Función para cálculos de ahorros
 def calcular_ahorros(auditorias_mensuales, costo_auditoria_manual, fraudes_mensuales, costo_total_fraudes,
@@ -29,6 +30,8 @@ def calcular_ahorros(auditorias_mensuales, costo_auditoria_manual, fraudes_mensu
         "costo_auditorias_reducido": costo_auditorias_reducido,
         "fraudes_reducidos": fraudes_reducidos,
         "costo_fraudes_reducido": costo_fraudes_reducido,
+        "ahorro_auditorias": ahorro_auditorias,
+        "ahorro_fraudes": ahorro_fraudes,
         "ahorro_total": ahorro_total,
         "meses_recuperacion": meses_recuperacion
     }
@@ -52,9 +55,9 @@ def calcular_business_case():
     st.subheader("Ingrese los datos para calcular el ROI y ahorro esperado")
 
     # Entradas del usuario
-    auditorias_mensuales = st.number_input("Auditorías manuales por mes", min_value=0, value=20000)
-    costo_auditoria_manual = st.number_input("Costo por auditoría manual (USD)", min_value=0.0, value=5.0)
-    fraudes_mensuales = st.number_input("Fraudes detectados por mes", min_value=0, value=100)
+    auditorias_mensuales = st.number_input("Auditorías manuales por mes", min_value=0, value=100)
+    costo_auditoria_manual = st.number_input("Costo por auditoría manual (USD)", min_value=0.0, value=50.0)
+    fraudes_mensuales = st.number_input("Fraudes detectados por mes", min_value=0, value=200)
     costo_total_fraudes = st.number_input("Costo total de fraudes mensuales (USD)", min_value=0.0, value=20000.0)
     porc_red_auditorias = st.slider("Reducción esperada en auditorías (%)", 0, 100, 50) / 100
     porc_red_fraudes = st.slider("Reducción esperada en fraudes (%)", 0, 100, 40) / 100
@@ -77,9 +80,11 @@ def calcular_business_case():
             st.write(f"Costo actual auditorías: ${resultados['costo_total_auditorias']:,.2f} USD")
             st.write(f"Auditorías reducidas: {resultados['auditorias_reducidas']:,.0f}/mes")
             st.write(f"Nuevo costo auditorías: ${resultados['costo_auditorias_reducido']:,.2f} USD")
+            st.write(f"Ahorro en auditorías: ${resultados['ahorro_auditorias']:,.2f} USD")
         with col2:
             st.write(f"Fraudes reducidos: {resultados['fraudes_reducidos']:,.0f}/mes")
             st.write(f"Nuevo costo fraudes: ${resultados['costo_fraudes_reducido']:,.2f} USD")
+            st.write(f"Ahorro en fraudes: ${resultados['ahorro_fraudes']:,.2f} USD")
             st.write(f"Ahorro total mensual: ${resultados['ahorro_total']:,.2f} USD")
         
         st.write(f"Tiempo de recuperación: {resultados['meses_recuperacion']:.2f} meses")
@@ -87,10 +92,23 @@ def calcular_business_case():
         # Proyección y visualización
         df_proyeccion = generar_proyeccion(resultados["ahorro_total"], inversion_inicial)
         st.subheader("Proyección de ROI a 3 años")
-        fig = px.line(df_proyeccion, x="Meses", y=["Ahorro Acumulado (USD)", "ROI Acumulado (%)"],
-                      title="Ahorro y ROI Acumulado", markers=True,
-                      labels={"value": "Valor", "variable": "Métrica"})
-        fig.update_layout(yaxis_title="USD / %", xaxis_title="Meses", hovermode="x unified")
+        
+        # Crear gráfico con eje secundario
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df_proyeccion["Meses"], y=df_proyeccion["Ahorro Acumulado (USD)"],
+                                 mode='lines+markers', name='Ahorro Acumulado (USD)', line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=df_proyeccion["Meses"], y=df_proyeccion["ROI Acumulado (%)"],
+                                 mode='lines+markers', name='ROI Acumulado (%)', yaxis='y2', line=dict(color='orange')))
+        
+        # Configurar layout con eje secundario
+        fig.update_layout(
+            title="Ahorro y ROI Acumulado",
+            xaxis=dict(title="Meses"),
+            yaxis=dict(title="Ahorro Acumulado (USD)", titlefont=dict(color="blue"), tickfont=dict(color="blue")),
+            yaxis2=dict(title="ROI Acumulado (%)", titlefont=dict(color="orange"), tickfont=dict(color="orange"),
+                        overlaying="y", side="right"),
+            hovermode="x unified"
+        )
         st.plotly_chart(fig)
 
 if __name__ == "__main__":
